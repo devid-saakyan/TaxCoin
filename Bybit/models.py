@@ -10,3 +10,13 @@ class User(models.Model):
     Balance = models.FloatField()
     RegistrationDate = models.DateTimeField(auto_now_add=True)
     RegisteredWithReferral = models.BooleanField(default=False)
+    points = models.IntegerField(default=0)
+
+
+class Referral(models.Model):
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals')
+    referred_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referred_by')
+    date_referred = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.referrer.TelegramId} referred {self.referred_user.TelegramId}"
