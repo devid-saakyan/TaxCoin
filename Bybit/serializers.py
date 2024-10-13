@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from Bybit.models import User
-
+from rest_framework import serializers
+from .models import Task, UserTask
 
 class VerifyUserSerializer(serializers.Serializer):
     telegram_id = serializers.IntegerField()
@@ -37,3 +38,29 @@ class InviteRequestSerializer(serializers.Serializer):
 
 class InviteResponseSerializer(serializers.Serializer):
     link = serializers.CharField(max_length=100)
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'description', 'reward_points', 'is_active', 'icon']
+
+    def get_icon(self, obj):
+        request = self.context.get('request')
+        if obj.icon and request:
+            return request.build_absolute_uri(obj.icon.url)
+        return None
+
+
+class UserTaskSerializer(serializers.ModelSerializer):
+    task = TaskSerializer()
+
+    class Meta:
+        model = UserTask
+        fields = ['task', 'is_completed', 'completed_at']
+
+
+
+class BybitKeyCheckSerializer(serializers.Serializer):
+    api_key = serializers.CharField(max_length=100)
+    api_secret = serializers.CharField(max_length=100)

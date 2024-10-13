@@ -3,6 +3,7 @@ import hmac
 import requests
 import hashlib
 import json
+from pybit.unified_trading import HTTP
 
 
 def bybit_ref(uid):
@@ -37,6 +38,21 @@ def bybit_ref(uid):
         return response.json()
 
 
+def check_bybit_keys(api_key, api_secret):
+    session = HTTP(
+        testnet=False,
+        api_key=api_key,
+        api_secret=api_secret,
+    )
+    try:
+        print(session.get_executions(
+            category="linear",
+            limit=1,))
+        return True
+    except Exception as e:
+        return False
+
+
 if __name__ == '__main__':
     print(bybit_ref('266167900'))
-    print(bybit_ref('2661679000'))
+    print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
