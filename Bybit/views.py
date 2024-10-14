@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import User
+from .models import User, Referral
 from .utlis import bybit_ref, check_bybit_keys
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
@@ -20,24 +20,38 @@ from drf_yasg import openapi
 @api_view(['POST'])
 def verify_user(request):
     serializer = VerifyUserSerializer(data=request.data)
-    print(serializer)
     if serializer.is_valid():
         telegram_id = serializer.validated_data['telegram_id']
         bybit_id = serializer.validated_data['bybit_id']
         referral_id = serializer.validated_data.get('referral_id')
         RegisteredWithReferral = bool(referral_id)
+
+        # Проверка на взаимное реферирование
+        if referral_id:
+            referrer = User.objects.filter(TelegramId=referral_id).first()
+            if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
+                return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=400)
+
         registered, traded_volume = bybit_ref(bybit_id)
-        print(registered, traded_volume)
         if registered:
             user, created = User.objects.update_or_create(
                 TelegramId=telegram_id,
-                defaults={'BybitId': bybit_id, 'Balance': traded_volume, 'RegisteredWithReferral': RegisteredWithReferral},
+                defaults={
+                    'BybitId': bybit_id,
+                    'Balance': traded_volume,
+                    'RegisteredWithReferral': RegisteredWithReferral
+                },
             )
+
+            # Если есть referral_id, создаем запись в Referral
+            if referral_id and created:
+                Referral.objects.create(referrer_id=referral_id, referred_user=user)
+
             return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
         else:
             return JsonResponse({'success': False, 'message': 'User not registered with referral'})
 
-    return JsonResponse({'error': 'Invalid request method'})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 @swagger_auto_schema(method='post',
@@ -88,6 +102,16 @@ def delete_user_by_id(request, user_id):
         return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_user_referrals(request, telegram_id):
+    user = get_object_or_404(User, TelegramId=telegram_id)
+    referrals = user.referrals.all()
+    referred_users = [ref.referred_user for ref in referrals]
+
+    serializer = UserSerializer(referred_users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(method='post',

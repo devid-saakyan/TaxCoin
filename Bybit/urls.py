@@ -12,4 +12,5 @@ urlpatterns = [
     path('invitelink/', get_invitation_link, name='get_invitation_link'),
     path('tasks/', TaskViewSet.as_view({'get': 'list'}), name='get_tasks'),
     path('complete_task/', CompleteTaskViewSet.as_view({'post': 'create'}), name='complete_task'),
+    path('referrals/<int:telegram_id>/', get_user_referrals, name='referrals'),
 ]
