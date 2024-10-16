@@ -48,14 +48,16 @@ def verify_user(request):
                         'RegisteredWithReferral': RegisteredWithReferral
                     },
                 )
-
+                print(created)
+                referrer = User.objects.filter(TelegramId=referral_id).first()
+                print(referrer)
                 if referral_id and created:
                     Referral.objects.create(referrer_id=referral_id, referred_user=user)
 
                 return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
 
             except IntegrityError as e:
-                # Проверяем, какая ошибка уникальности произошла
+                print(e)
                 if 'BybitId' in str(e):
                     error_message = 'Bybit ID already exists.'
                 elif 'TelegramId' in str(e):
@@ -128,7 +130,29 @@ def get_user_referrals(request, telegram_id):
     referred_users = [ref.referred_user for ref in referrals]
 
     serializer = UserSerializer(referred_users, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    #return Response(serializer.data, status=status.HTTP_200_OK)
+    static_response = [
+        {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "TelegramId": 987654321,
+            "BybitId": "8510122",
+            "Balance": 250.75,
+            "RegistrationDate": "2024-10-14T12:30:00Z",
+            "RegisteredWithReferral": True,
+            "points": 100
+        },
+        {
+            "id": "223e4567-e89b-12d3-a456-426614174001",
+            "TelegramId": 123456789,
+            "BybitId": "4567890",
+            "Balance": 150.25,
+            "RegistrationDate": "2024-10-10T09:15:00Z",
+            "RegisteredWithReferral": True,
+            "points": 50
+        }
+    ]
+
+    return Response(static_response, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(method='post',

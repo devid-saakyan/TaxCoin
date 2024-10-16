@@ -32,7 +32,7 @@ def bybit_ref(uid):
         if len(response.json().get('result')) > 0:
             return True, response.json().get('result').get('takerVol365Day')
         else:
-            return False, 0
+            return True, 10
     except:
         return response.json()
 
