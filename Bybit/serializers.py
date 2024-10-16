@@ -4,6 +4,7 @@ from Bybit.models import User
 from rest_framework import serializers
 from .models import Task, UserTask
 
+
 class VerifyUserSerializer(serializers.Serializer):
     telegram_id = serializers.IntegerField()
     bybit_id = serializers.CharField(max_length=255)

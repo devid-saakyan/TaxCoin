@@ -11,6 +11,7 @@ from rest_framework import viewsets, permissions
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_yasg import openapi
+from django.db import IntegrityError
 
 
 
@@ -26,28 +27,44 @@ def verify_user(request):
         referral_id = serializer.validated_data.get('referral_id')
         RegisteredWithReferral = bool(referral_id)
 
-        # Проверка на взаимное реферирование
         if referral_id:
+            try:
+                referral_id = int(referral_id)
+            except ValueError:
+                return JsonResponse({'error': 'Invalid referral ID'}, status=400)
+
             referrer = User.objects.filter(TelegramId=referral_id).first()
             if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
                 return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=400)
 
         registered, traded_volume = bybit_ref(bybit_id)
         if registered:
-            user, created = User.objects.update_or_create(
-                TelegramId=telegram_id,
-                defaults={
-                    'BybitId': bybit_id,
-                    'Balance': traded_volume,
-                    'RegisteredWithReferral': RegisteredWithReferral
-                },
-            )
+            try:
+                user, created = User.objects.update_or_create(
+                    TelegramId=telegram_id,
+                    defaults={
+                        'BybitId': bybit_id,
+                        'Balance': traded_volume,
+                        'RegisteredWithReferral': RegisteredWithReferral
+                    },
+                )
 
-            # Если есть referral_id, создаем запись в Referral
-            if referral_id and created:
-                Referral.objects.create(referrer_id=referral_id, referred_user=user)
+                if referral_id and created:
+                    Referral.objects.create(referrer_id=referral_id, referred_user=user)
 
-            return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
+                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
+
+            except IntegrityError as e:
+                # Проверяем, какая ошибка уникальности произошла
+                if 'BybitId' in str(e):
+                    error_message = 'Bybit ID already exists.'
+                elif 'TelegramId' in str(e):
+                    error_message = 'Telegram ID already exists.'
+                else:
+                    error_message = 'A unique constraint failed.'
+
+                return JsonResponse({'error': error_message}, status=400)
+
         else:
             return JsonResponse({'success': False, 'message': 'User not registered with referral'})
 

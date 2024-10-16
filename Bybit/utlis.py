@@ -28,10 +28,9 @@ def bybit_ref(uid):
 
     url = "https://api.bybit.com/v5/user/aff-customer-info?"
     response = requests.get(url + payload, headers=headers)
-    print(response.json())
     try:
         if len(response.json().get('result')) > 0:
-            return True, response.json()#.get('result').get('takerVol30Day')
+            return True, response.json().get('result').get('takerVol365Day')
         else:
             return False, 0
     except:
@@ -55,4 +54,4 @@ def check_bybit_keys(api_key, api_secret):
 
 if __name__ == '__main__':
     print(bybit_ref('266167900'))
-    print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
+    #print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
