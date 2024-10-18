@@ -125,11 +125,11 @@ def delete_user_by_id(request, user_id):
 
 @api_view(['GET'])
 def get_user_referrals(request, telegram_id):
-    user = get_object_or_404(User, TelegramId=telegram_id)
-    referrals = user.referrals.all()
-    referred_users = [ref.referred_user for ref in referrals]
+    #user = get_object_or_404(User, TelegramId=telegram_id)
+    #referrals = user.referrals.all()
+    #referred_users = [ref.referred_user for ref in referrals]
 
-    serializer = UserSerializer(referred_users, many=True)
+    #serializer = UserSerializer(referred_users, many=True)
     #return Response(serializer.data, status=status.HTTP_200_OK)
     static_response = [
         {
