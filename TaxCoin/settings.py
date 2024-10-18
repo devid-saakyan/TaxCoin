@@ -28,10 +28,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*', '38.180.194.168']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://taxco-in.com',
-]
-
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://taxco-in.com',
+# ]
+CORS_ALLOW_ALL_ORIGINS = False
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Bybit',
     'drf_yasg',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
