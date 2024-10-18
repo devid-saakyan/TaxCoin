@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*', '38.180.194.168']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://taxco-in.com',
+]
 
 # Application definition
 
