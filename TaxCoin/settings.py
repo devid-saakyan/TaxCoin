@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-f3dy94hl-v9ez+(m)(ec_ir*l#46%8&#0a$x*h^e^@5^yb9!i$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '38.180.194.168']
+ALLOWED_HOSTS = ['*']
 
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://taxco-in.com',
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
