@@ -167,10 +167,10 @@ def fee_amount(request):
         registered, traded_volume = bybit_ref(bybit_id)
         print(registered, traded_volume)
         if registered:
-            fees = (float(traded_volume.get('result').get('takerVol365Day')) * 0.001
-                    + float(traded_volume.get('result').get('makerVol365Day')) * 0.0003)
+            fees = (float(traded_volume) * 0.001
+                    + float(traded_volume) * 0.0003)
             tax = fees * 2
-            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume.get('result').get('takerVol365Day'))}, status=200)
+            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume)}, status=200)
         else:
             return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=500)
     else:
