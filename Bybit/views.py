@@ -170,7 +170,7 @@ def fee_amount(request):
             fees = (float(traded_volume) * 0.001
                     + float(traded_volume) * 0.0003)
             tax = fees * 2
-            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume)}, status=200)
+            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume), 'Balance': 24}, status=200)
         else:
             return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=500)
     else:
