@@ -21,6 +21,7 @@ from django.db import IntegrityError
 @api_view(['POST'])
 def verify_user(request):
     serializer = VerifyUserSerializer(data=request.data)
+    print(serializer)
     if serializer.is_valid():
         telegram_id = serializer.validated_data['telegram_id']
         bybit_id = serializer.validated_data['bybit_id']
@@ -57,7 +58,7 @@ def verify_user(request):
                 return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
 
             except IntegrityError as e:
-                print(e)
+                print(str(e))
                 if 'BybitId' in str(e):
                     error_message = 'Bybit ID already exists.'
                 elif 'TelegramId' in str(e):

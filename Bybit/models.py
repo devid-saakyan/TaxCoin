@@ -14,8 +14,8 @@ class User(models.Model):
 
 
 class Referral(models.Model):
-    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals')
-    referred_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referred_by')
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals', to_field='TelegramId')
+    referred_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referred_by', to_field='TelegramId')
     date_referred = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

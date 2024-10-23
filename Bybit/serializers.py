@@ -8,7 +8,7 @@ from .models import Task, UserTask
 class VerifyUserSerializer(serializers.Serializer):
     telegram_id = serializers.IntegerField()
     bybit_id = serializers.CharField(max_length=255)
-    referral_id = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    referral_id = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
 
 
 class VerifyUserResponseSerializer(serializers.Serializer):
