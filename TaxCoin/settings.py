@@ -28,9 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://taxco-in.com',
-# ]
+CSRF_TRUSTED_ORIGINS = ['https://taxco-in.com']
 CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
