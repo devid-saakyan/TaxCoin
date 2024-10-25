@@ -23,4 +23,10 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Referral)
 class ReferralAdmin(admin.ModelAdmin):
-    list_display = ('referrer', 'referred_user')
+    list_display = ('referrer_telegram_id', 'referred_user_telegram_id', 'date_referred')
+
+    def referrer_telegram_id(self, obj):
+        return obj.referrer.TelegramId
+
+    def referred_user_telegram_id(self, obj):
+        return obj.referred_user.TelegramId

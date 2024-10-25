@@ -30,7 +30,7 @@ def bybit_ref(uid):
     response = requests.get(url + payload, headers=headers)
     try:
         if len(response.json().get('result')) > 0:
-            return True, response.json().get('result').get('takerVol365Day')
+            return True, response.json()#.get('result').get('takerVol365Day')
         else:
             return True, 10
     except:
@@ -52,6 +52,13 @@ def check_bybit_keys(api_key, api_secret):
         return False
 
 
+def CheckKYC(BybitId):
+    try:
+        return bybit_ref(BybitId)[1].get('result').get('KycLevel')
+    except Exception as e:
+        return 0
+
 if __name__ == '__main__':
     print(bybit_ref('266167900'))
+    print(CheckKYC('266167900'))
     #print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))

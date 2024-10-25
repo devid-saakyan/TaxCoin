@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import User, Referral
-from .utlis import bybit_ref, check_bybit_keys
+from .utlis import bybit_ref, check_bybit_keys, CheckKYC
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -87,6 +87,16 @@ def validate_bybit_keys(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='post',
+                     request_body=InviteRequestSerializer)
+@api_view(['POST'])
+def CheckKyc(request):
+    serializer = InviteRequestSerializer(data=request.data)
+    if serializer.is_valid():
+        KYC = CheckKYC(serializer.validated_data['telegram_id'])
+        return Response({'KYC': bool(KYC)})
+
+
 @api_view(['GET'])
 def list_users(request):
     users = User.objects.all()
@@ -126,34 +136,34 @@ def delete_user_by_id(request, user_id):
 
 @api_view(['GET'])
 def get_user_referrals(request, telegram_id):
-    #user = get_object_or_404(User, TelegramId=telegram_id)
-    #referrals = user.referrals.all()
-    #referred_users = [ref.referred_user for ref in referrals]
+    user = get_object_or_404(User, TelegramId=telegram_id)
+    referrals = user.referrals.all()
+    referred_users = [ref.referred_user for ref in referrals]
 
-    #serializer = UserSerializer(referred_users, many=True)
-    #return Response(serializer.data, status=status.HTTP_200_OK)
-    static_response = [
-        {
-            "id": "123e4567-e89b-12d3-a456-426614174000",
-            "TelegramId": 987654321,
-            "BybitId": "8510122",
-            "Balance": 250.75,
-            "RegistrationDate": "2024-10-14T12:30:00Z",
-            "RegisteredWithReferral": True,
-            "points": 100
-        },
-        {
-            "id": "223e4567-e89b-12d3-a456-426614174001",
-            "TelegramId": 123456789,
-            "BybitId": "4567890",
-            "Balance": 150.25,
-            "RegistrationDate": "2024-10-10T09:15:00Z",
-            "RegisteredWithReferral": True,
-            "points": 50
-        }
-    ]
-
-    return Response(static_response, status=status.HTTP_200_OK)
+    serializer = UserSerializer(referred_users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+    # static_response = [
+    #     {
+    #         "id": "123e4567-e89b-12d3-a456-426614174000",
+    #         "TelegramId": 987654321,
+    #         "BybitId": "8510122",
+    #         "Balance": 250.75,
+    #         "RegistrationDate": "2024-10-14T12:30:00Z",
+    #         "RegisteredWithReferral": True,
+    #         "points": 100
+    #     },
+    #     {
+    #         "id": "223e4567-e89b-12d3-a456-426614174001",
+    #         "TelegramId": 123456789,
+    #         "BybitId": "4567890",
+    #         "Balance": 150.25,
+    #         "RegistrationDate": "2024-10-10T09:15:00Z",
+    #         "RegisteredWithReferral": True,
+    #         "points": 50
+    #     }
+    # ]
+    #
+    # return Response(static_response, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(method='post',
@@ -166,6 +176,7 @@ def fee_amount(request):
         bybit_id = serializer.validated_data['bybit_id']
 
         registered, traded_volume = bybit_ref(bybit_id)
+        traded_volume = traded_volume.get('result').get('takerVol365Day')
         print(registered, traded_volume)
         if registered:
             fees = (float(traded_volume) * 0.001
@@ -246,11 +257,17 @@ class CompleteTaskViewSet(viewsets.ViewSet):
             return Response({"error": "Task ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         task = get_object_or_404(Task, pk=task_id, is_active=True)
+        user = get_object_or_404(User, TelegramId=telegram_user_id)
+
         user_task, created = UserTask.objects.get_or_create(telegram_user_id=telegram_user_id, task=task)
 
+        if user_task.is_completed:
+            return Response({"message": "Task already completed"}, status=status.HTTP_400_BAD_REQUEST)
+
         if not user_task.is_completed:
+            user.points += task.reward_points
+            user.save()
             user_task.is_completed = True
             user_task.completed_at = timezone.now()
             user_task.save()
-
-        return Response({'status': 'Task completed'}, status=status.HTTP_200_OK)
+            return Response({'status': 'Task completed'}, status=status.HTTP_200_OK)
