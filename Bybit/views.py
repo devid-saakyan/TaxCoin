@@ -277,4 +277,4 @@ class CompleteTaskViewSet(viewsets.ViewSet):
             user_task.is_completed = True
             user_task.completed_at = timezone.now()
             user_task.save()
-            return Response({"success": True},{'status': 'Task completed'}, status=status.HTTP_200_OK)
+            return Response({"success": True, 'status': 'Task completed'}, status=status.HTTP_200_OK)
