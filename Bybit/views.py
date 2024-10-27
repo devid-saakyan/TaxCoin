@@ -32,11 +32,11 @@ def verify_user(request):
             try:
                 referral_id = int(referral_id)
             except ValueError:
-                return JsonResponse({'error': 'Invalid referral ID'}, status=400)
+                return JsonResponse({'error': 'Invalid referral ID'}, status=200)
 
             referrer = User.objects.filter(TelegramId=referral_id).first()
             if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
-                return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=400)
+                return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=200)
 
         registered, traded_volume = bybit_ref(bybit_id)
         if registered:
@@ -184,9 +184,20 @@ def fee_amount(request):
             tax = fees * 2
             return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume), 'Balance': 24}, status=200)
         else:
-            return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=500)
+            return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=200)
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid input'}, status=400)
+        return JsonResponse({'success': False, 'error': 'Invalid input'}, status=200)
+
+
+@api_view(['GET'])
+def get_points(request, telegram_id):
+    try:
+        user = User.objects.get(TelegramId=telegram_id)
+        serializer = UserSerializer(user)
+        return Response({"points": serializer.data.get('points')}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_200_OK)
+
 
 
 @swagger_auto_schema(method='post',
@@ -200,7 +211,7 @@ def get_invitation_link(request):
                          'link': 'https://t.me/TaxCoinBot?start=referral_{}'.format(serializer.validated_data['telegram_id'])},
                             status=200)
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid input', 'details': serializer.errors}, status=400)
+        return JsonResponse({'success': False, 'error': 'Invalid input', 'details': serializer.errors}, status=200)
 
 
 class TaskViewSet(viewsets.ReadOnlyModelViewSet):
@@ -219,7 +230,7 @@ class TaskViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request):
         telegram_user_id = request.query_params.get('telegram_user_id')
         if not telegram_user_id:
-            return Response({"error": "Telegram User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Telegram User ID is required"}, status=status.HTTP_200_OK)
 
         tasks = Task.objects.filter(is_active=True)
         user_tasks = UserTask.objects.filter(telegram_user_id=telegram_user_id)
@@ -252,9 +263,9 @@ class CompleteTaskViewSet(viewsets.ViewSet):
         task_id = request.data.get('task_id')
 
         if not telegram_user_id:
-            return Response({"success": False, "error": "Telegram User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False, "error": "Telegram User ID is required"}, status=status.HTTP_200_OK)
         if not task_id:
-            return Response({"success": False,  "error": "Task ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False,  "error": "Task ID is required"}, status=status.HTTP_200_OK)
 
         try:
             task = Task.objects.get(pk=task_id, is_active=True)
@@ -269,7 +280,7 @@ class CompleteTaskViewSet(viewsets.ViewSet):
         user_task, created = UserTask.objects.get_or_create(telegram_user_id=telegram_user_id, task=task)
 
         if user_task.is_completed:
-            return Response({"success": False, "message": "Task already completed"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False, "message": "Task already completed"}, status=status.HTTP_200_OK)
 
         if not user_task.is_completed:
             user.points += task.reward_points
