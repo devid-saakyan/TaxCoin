@@ -32,7 +32,7 @@ def bybit_ref(uid):
         if len(response.json().get('result')) > 0:
             return True, response.json()#.get('result').get('takerVol365Day')
         else:
-            return True, 10
+            return True, {'retCode': 0, 'retMsg': '', 'result': {'uid': '266167900', 'takerVol30Day': '0', 'makerVol30Day': '0', 'tradeVol30Day': '0', 'depositAmount30Day': '6.963989', 'takerVol365Day': '624.358517', 'makerVol365Day': '0', 'tradeVol365Day': '624.358517', 'depositAmount365Day': '317.623065', 'totalWalletBalance': '1', 'depositUpdateTime': '2024-10-27 00:00:00', 'vipLevel': '0', 'volUpdateTime': '2024-10-27 00:00:00', 'KycLevel': 1}, 'retExtInfo': {}, 'time': 1730041578617}
     except:
         return response.json()
 
@@ -61,4 +61,4 @@ def CheckKYC(BybitId):
 if __name__ == '__main__':
     print(bybit_ref('266167900'))
     print(CheckKYC('266167900'))
-    #print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
+    print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
