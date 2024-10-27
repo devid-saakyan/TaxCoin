@@ -45,7 +45,7 @@ def verify_user(request):
                     TelegramId=telegram_id,
                     defaults={
                         'BybitId': bybit_id,
-                        'Balance': traded_volume,
+                        'Balance': traded_volume.get('result').get('takerVol365Day'),
                         'RegisteredWithReferral': RegisteredWithReferral
                     },
                 )
@@ -55,7 +55,7 @@ def verify_user(request):
                 if referral_id and created:
                     Referral.objects.create(referrer_id=referral_id, referred_user=user)
 
-                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
+                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume.get('result').get('takerVol365Day')})
 
             except IntegrityError as e:
                 print(str(e))
