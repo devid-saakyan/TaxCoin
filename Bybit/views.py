@@ -252,17 +252,24 @@ class CompleteTaskViewSet(viewsets.ViewSet):
         task_id = request.data.get('task_id')
 
         if not telegram_user_id:
-            return Response({"error": "Telegram User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False}, {"error": "Telegram User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
         if not task_id:
-            return Response({"error": "Task ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False},{"error": "Task ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        task = get_object_or_404(Task, pk=task_id, is_active=True)
-        user = get_object_or_404(User, TelegramId=telegram_user_id)
+        try:
+            task = Task.objects.get(pk=task_id, is_active=True)
+        except Task.DoesNotExist:
+            return Response({"success": False, "message": "Task not found or inactive"}, status=status.HTTP_200_OK)
+
+        try:
+            user = User.objects.get(TelegramId=telegram_user_id)
+        except User.DoesNotExist:
+            return Response({"success": False, "message": "User not found"}, status=status.HTTP_200_OK)
 
         user_task, created = UserTask.objects.get_or_create(telegram_user_id=telegram_user_id, task=task)
 
         if user_task.is_completed:
-            return Response({"message": "Task already completed"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False}, {"message": "Task already completed"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not user_task.is_completed:
             user.points += task.reward_points
@@ -270,4 +277,4 @@ class CompleteTaskViewSet(viewsets.ViewSet):
             user_task.is_completed = True
             user_task.completed_at = timezone.now()
             user_task.save()
-            return Response({'status': 'Task completed'}, status=status.HTTP_200_OK)
+            return Response({"success": True},{'status': 'Task completed'}, status=status.HTTP_200_OK)
