@@ -15,4 +15,5 @@ urlpatterns = [
     path('complete_task/', CompleteTaskViewSet.as_view({'post': 'create'}), name='complete_task'),
     path('referrals/<int:telegram_id>/', get_user_referrals, name='referrals'),
     path('KYC/', CheckKyc, name='referrals'),
+    path('Subscribed/', CheckSubscribe, name='Subscribe'),
 ]

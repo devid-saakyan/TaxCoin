@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_yasg import openapi
 from django.db import IntegrityError
+from telegramAdmin import is_user_in_channel
 
 
 
@@ -95,6 +96,17 @@ def CheckKyc(request):
     if serializer.is_valid():
         KYC = CheckKYC(serializer.validated_data['telegram_id'])
         return Response({'KYC': bool(KYC)})
+
+
+@swagger_auto_schema(method='post',
+                     request_body=InviteRequestSerializer)
+@api_view(['POST'])
+def CheckSubscribe(request):
+    serializer = InviteRequestSerializer(data=request.data)
+    if serializer.is_valid():
+        print(serializer.validated_data['telegram_id'])
+        subscribed = is_user_in_channel(serializer.validated_data['telegram_id'])
+        return Response({'Subscribed': subscribed})
 
 
 @api_view(['GET'])
@@ -197,7 +209,6 @@ def get_points(request, telegram_id):
         return Response({"points": serializer.data.get('points')}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_200_OK)
-
 
 
 @swagger_auto_schema(method='post',
