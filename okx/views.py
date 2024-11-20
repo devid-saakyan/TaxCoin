@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import User, Referral
-from .utlis import bybit_ref, check_bybit_keys, CheckKYC
+from .utlis import okx_ref, check_okx_keys, CheckKYC
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -25,7 +25,7 @@ def verify_user(request):
     print(serializer)
     if serializer.is_valid():
         telegram_id = serializer.validated_data['telegram_id']
-        bybit_id = serializer.validated_data['bybit_id']
+        OKX_id = serializer.validated_data['OKX_id']
         referral_id = serializer.validated_data.get('referral_id')
         RegisteredWithReferral = bool(referral_id)
 
@@ -39,13 +39,13 @@ def verify_user(request):
             if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
                 return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=200)
 
-        registered, traded_volume = bybit_ref(bybit_id)
+        registered, traded_volume = okx_ref(OKX_id)
         if registered:
             try:
                 user, created = User.objects.update_or_create(
                     TelegramId=telegram_id,
                     defaults={
-                        'BybitId': bybit_id,
+                        'OKXId': OKX_id,
                         'Balance': traded_volume.get('result').get('takerVol365Day'),
                         'RegisteredWithReferral': RegisteredWithReferral
                     },
@@ -60,8 +60,8 @@ def verify_user(request):
 
             except IntegrityError as e:
                 print(str(e))
-                if 'BybitId' in str(e):
-                    error_message = 'Bybit ID already exists.'
+                if 'OKXId' in str(e):
+                    error_message = 'OKX ID already exists.'
                 elif 'TelegramId' in str(e):
                     error_message = 'Telegram ID already exists.'
                 else:
@@ -76,14 +76,14 @@ def verify_user(request):
 
 
 @swagger_auto_schema(method='post',
-                     request_body=BybitKeyCheckSerializer)
+                     request_body=OKXKeyCheckSerializer)
 @api_view(['POST'])
-def validate_bybit_keys(request):
-    serializer = BybitKeyCheckSerializer(data=request.data)
+def validate_OKX_keys(request):
+    serializer = OKXKeyCheckSerializer(data=request.data)
     if serializer.is_valid():
         api_key = serializer.validated_data['api_key']
         api_secret = serializer.validated_data['api_secret']
-        is_valid = check_bybit_keys(api_key, api_secret)
+        is_valid = check_okx_keys(api_key, api_secret)
         return Response({'is_valid': is_valid}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -158,7 +158,7 @@ def get_user_referrals(request, telegram_id):
     #     {
     #         "id": "123e4567-e89b-12d3-a456-426614174000",
     #         "TelegramId": 987654321,
-    #         "BybitId": "8510122",
+    #         "OKXId": "8510122",
     #         "Balance": 250.75,
     #         "RegistrationDate": "2024-10-14T12:30:00Z",
     #         "RegisteredWithReferral": True,
@@ -167,7 +167,7 @@ def get_user_referrals(request, telegram_id):
     #     {
     #         "id": "223e4567-e89b-12d3-a456-426614174001",
     #         "TelegramId": 123456789,
-    #         "BybitId": "4567890",
+    #         "OKXId": "4567890",
     #         "Balance": 150.25,
     #         "RegistrationDate": "2024-10-10T09:15:00Z",
     #         "RegisteredWithReferral": True,
@@ -185,9 +185,9 @@ def get_user_referrals(request, telegram_id):
 def fee_amount(request):
     serializer = FeesRequestSerializer(data=request.data)
     if serializer.is_valid():
-        bybit_id = serializer.validated_data['bybit_id']
+        OKX_id = serializer.validated_data['OKX_id']
 
-        registered, traded_volume = bybit_ref(bybit_id)
+        registered, traded_volume = okx_ref(OKX_id)
         traded_volume = traded_volume.get('result').get('takerVol365Day')
         print(registered, traded_volume)
         if registered:
@@ -196,7 +196,7 @@ def fee_amount(request):
             tax = fees * 2
             return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume), 'Balance': 24}, status=200)
         else:
-            return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=200)
+            return JsonResponse({'success': False, 'error': 'Failed to retrieve data from OKX API'}, status=200)
     else:
         return JsonResponse({'success': False, 'error': 'Invalid input'}, status=200)
 
