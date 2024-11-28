@@ -13,7 +13,9 @@ from django.utils import timezone
 from drf_yasg import openapi
 from django.db import IntegrityError
 from telegramAdmin import is_user_in_channel
-
+from django.utils.timezone import now
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 @swagger_auto_schema(method='post',
@@ -301,3 +303,52 @@ class CompleteTaskViewSet(viewsets.ViewSet):
             user_task.save()
             return Response({"success": True,
                              'status': 'Task completed'}, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter('TelegramId', openapi.IN_QUERY, description="Telegram User ID", type=openapi.TYPE_INTEGER),
+    ], responses={200: UserStateSerializer})
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'TelegramId': openapi.Schema(type=openapi.TYPE_INTEGER, description="Telegram User ID"),
+            'state': openapi.Schema(type=openapi.TYPE_INTEGER, description="New state"),
+        },required=['TelegramId', 'state'],
+    ),responses={200: UserStateSerializer}
+)
+@api_view(['GET', 'POST'])
+def user_state_view(request):
+    if request.method == 'GET':
+        telegram_id = request.query_params.get('TelegramId')
+        if not telegram_id:
+            return Response({'error': 'TelegramId is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_state = UserState.objects.get(telegram_id=telegram_id)
+            serializer = UserStateSerializer(user_state)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserState.DoesNotExist:
+            return Response({'error': 'User state not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    elif request.method == 'POST':
+        telegram_id = request.data.get('TelegramId')
+        new_state = request.data.get('state')
+
+        if not telegram_id or new_state is None:
+            return Response({'error': 'TelegramId and state are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_state, created = UserState.objects.update_or_create(
+            telegram_id=telegram_id,
+            defaults={'state': new_state, 'updated_at': now()}
+        )
+
+        serializer = UserStateSerializer(user_state)
+        if created:
+            message = "State created successfully"
+        else:
+            message = "State updated successfully"
+        return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)

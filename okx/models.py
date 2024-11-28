@@ -1,5 +1,5 @@
 import uuid
-
+from django.utils.timezone import now
 from django.db import models
 
 
@@ -11,6 +11,21 @@ class User(models.Model):
     RegistrationDate = models.DateTimeField(auto_now_add=True)
     RegisteredWithReferral = models.BooleanField(default=False)
     points = models.IntegerField(default=0)
+
+
+class UserState(models.Model):
+    telegram_id = models.BigIntegerField(unique=True)
+    state = models.IntegerField(
+        choices=[
+            (1, "State 1"),
+            (2, "State 2"),
+        ],
+        default=1,
+    )
+    updated_at = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"Telegram ID: {self.telegram_id}, State: {self.state}"
 
 
 class Referral(models.Model):

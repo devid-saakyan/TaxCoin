@@ -1,8 +1,7 @@
 from rest_framework import serializers
-
 from okx.models import User
 from rest_framework import serializers
-from .models import Task, UserTask
+from .models import Task, UserTask, UserState
 
 
 class VerifyUserSerializer(serializers.Serializer):
@@ -61,7 +60,12 @@ class UserTaskSerializer(serializers.ModelSerializer):
         fields = ['task', 'is_completed', 'completed_at']
 
 
-
 class OKXKeyCheckSerializer(serializers.Serializer):
     api_key = serializers.CharField(max_length=100)
     api_secret = serializers.CharField(max_length=100)
+
+
+class UserStateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserState
+        fields = ['telegram_id', 'state', 'updated_at']
