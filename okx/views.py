@@ -41,7 +41,7 @@ def verify_user(request):
             if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
                 return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=200)
 
-        registered, traded_volume = okx_ref(OKX_id)
+        registered, traded_volume = False, 0
         if registered:
             try:
                 user, created = User.objects.update_or_create(

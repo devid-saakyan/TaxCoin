@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Bybit',
     'okx',
+    'user_status',
     'drf_yasg',
     'corsheaders',
 ]

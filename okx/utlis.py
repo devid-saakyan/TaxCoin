@@ -62,44 +62,42 @@ def CheckKYC(okxId):
 
 
 
-def test():
-    import base64
-    import datetime as dt
-    import hmac
-    import requests
-    import hashlib
+import base64
+import datetime as dt
+import hmac
+import requests
+import hashlib
 
-    def okx_ref(uid):
-        BASE_URL = 'https://okx.com'
-        APIKEY = '6b28460a-4621-470d-9cf8-a7a153ceb5c2'
-        APISECRET = '088E39558E79DDAD64CBB49166DBCA4E'
-        PASS = "Botproger1!"
+def okx_ref(uid):
+    BASE_URL = 'https://okx.com'
+    APIKEY = '6b28460a-4621-470d-9cf8-a7a153ceb5c2'
+    APISECRET = '088E39558E79DDAD64CBB49166DBCA4E'
+    PASS = "Botproger1!"
 
-        def get_time():
-            return dt.datetime.utcnow().isoformat()[:-3] + 'Z'
+    def get_time():
+        return dt.datetime.utcnow().isoformat()[:-3] + 'Z'
 
-        def signature(timestamp, method, request_path, body, secret_key):
-            message = timestamp + method.upper() + request_path + (body if body else '')
-            mac = hmac.new(secret_key.encode('utf8'), msg=message.encode('utf-8'), digestmod=hashlib.sha256)
-            return base64.b64encode(mac.digest()).decode()
+    def signature(timestamp, method, request_path, body, secret_key):
+        message = timestamp + method.upper() + request_path + (body if body else '')
+        mac = hmac.new(secret_key.encode('utf8'), msg=message.encode('utf-8'), digestmod=hashlib.sha256)
+        return base64.b64encode(mac.digest()).decode()
 
-        def get_header(method, request_path, body=''):
-            cur_time = get_time()
-            return {
-                'Content-Type': 'application/json',
-                'OK-ACCESS-KEY': APIKEY,
-                'OK-ACCESS-SIGN': signature(cur_time, method, request_path, body, APISECRET),
-                'OK-ACCESS-TIMESTAMP': cur_time,
-                'OK-ACCESS-PASSPHRASE': PASS
-            }
+    def get_header(method, request_path, body=''):
+        cur_time = get_time()
+        return {
+            'Content-Type': 'application/json',
+            'OK-ACCESS-KEY': APIKEY,
+            'OK-ACCESS-SIGN': signature(cur_time, method, request_path, body, APISECRET),
+            'OK-ACCESS-TIMESTAMP': cur_time,
+            'OK-ACCESS-PASSPHRASE': PASS
+        }
 
-        request_path = f"/api/v5/affiliate/invitee/detail?uid={uid}"
-        headers = get_header("GET", request_path)
-        response = requests.get(BASE_URL + request_path, headers=headers)
-        return response.json()
+    request_path = f"/api/v5/affiliate/invitee/detail?uid={uid}"
+    headers = get_header("GET", request_path)
+    response = requests.get(BASE_URL + request_path, headers=headers)
+    return response.json()
 
-    uid = 592465647280661351
-    print(okx_ref(uid))
+
 
 
 
