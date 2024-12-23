@@ -11,6 +11,10 @@ class User(models.Model):
     RegistrationDate = models.DateTimeField(auto_now_add=True)
     RegisteredWithReferral = models.BooleanField(default=False)
     points = models.IntegerField(default=0)
+    nickname = models.CharField(max_length=50, null=True, blank=True)
+    firstname = models.CharField(max_length=50, null=True, blank=True)
+    lastname = models.CharField(max_length=50, null=True, blank=True)
+    photo_url = models.URLField(max_length=500, null=True, blank=True)
 
 
 class Referral(models.Model):
@@ -43,3 +47,11 @@ class UserTask(models.Model):
 
     def __str__(self):
         return f"{self.telegram_user_id} - {self.task.title}"
+
+
+class UserWallet(models.Model):
+    telegram_id = models.BigIntegerField(unique=True)
+    wallet_address = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return f"Telegram ID: {self.telegram_id}, Wallet Address: {self.wallet_address}"

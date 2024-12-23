@@ -2,12 +2,16 @@
 
 from rest_framework import serializers
 from Bybit.models import User
-from .models import Task, UserTask
+from .models import Task, UserTask, UserWallet
 
 class VerifyUserSerializer(serializers.Serializer):
     telegram_id = serializers.IntegerField()
     bybit_id = serializers.CharField(max_length=255)
     referral_id = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+    nickname = serializers.CharField(max_length=50, required=False, allow_blank=True, allow_null=True)
+    firstname = serializers.CharField(max_length=50, required=False, allow_blank=True, allow_null=True)
+    lastname = serializers.CharField(max_length=50, required=False, allow_blank=True, allow_null=True)
+    photo_url = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         ref_name = "BybitVerifyUser"
@@ -72,3 +76,9 @@ class BybitKeyCheckSerializer(serializers.Serializer):
 
     class Meta:
         ref_name = "BybitKeyCheck"
+
+
+class UserWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserWallet
+        fields = ['telegram_id', 'wallet_address']

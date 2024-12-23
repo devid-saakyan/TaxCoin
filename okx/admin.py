@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Task, UserTask, User, Referral, UserState
+from .models import Task, UserTask, User, Referral, UserState, UserWallet
 
 admin.site.site_header = ("TAXCOIN admin")       # Заголовок на главной странице админки
 admin.site.site_title = ("Your Custom Title")         # Заголовок на вкладке браузера
@@ -34,3 +34,9 @@ class ReferralAdmin(admin.ModelAdmin):
 @admin.register(UserState)
 class UserStateAdmin(admin.ModelAdmin):
     list_display = ('telegram_id', 'state', )
+
+
+@admin.register(UserWallet)
+class UserWalletAdmin(admin.ModelAdmin):
+    list_display = ('telegram_id', 'wallet_address')
+    search_fields = ('telegram_id', 'wallet_address')

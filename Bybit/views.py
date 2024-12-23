@@ -27,6 +27,10 @@ def verify_user(request):
         telegram_id = serializer.validated_data['telegram_id']
         bybit_id = serializer.validated_data['bybit_id']
         referral_id = serializer.validated_data.get('referral_id')
+        nickname = serializer.validated_data.get('nickname')
+        firstname = serializer.validated_data.get('firstname')
+        lastname = serializer.validated_data.get('lastname')
+        photo_url = serializer.validated_data.get('photo_url')
         RegisteredWithReferral = bool(referral_id)
 
         if referral_id:
@@ -47,7 +51,11 @@ def verify_user(request):
                     defaults={
                         'BybitId': bybit_id,
                         'Balance': traded_volume.get('result').get('takerVol365Day'),
-                        'RegisteredWithReferral': RegisteredWithReferral
+                        'RegisteredWithReferral': RegisteredWithReferral,
+                        'nickname': nickname,
+                        'firstname': firstname,
+                        'lastname': lastname,
+                        'photo_url': photo_url,
                     },
                 )
                 print(created)
@@ -301,3 +309,22 @@ class CompleteTaskViewSet(viewsets.ViewSet):
             user_task.save()
             return Response({"success": True,
                              'status': 'Task completed'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def create_user_wallet(request):
+    serializer = UserWalletSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def get_user_wallet(request, telegram_id):
+    try:
+        wallet = UserWallet.objects.get(telegram_id=telegram_id)
+        serializer = UserWalletSerializer(wallet)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except UserWallet.DoesNotExist:
+        return Response({'error': 'Wallet not found for the given telegram_id'}, status=status.HTTP_404_NOT_FOUND)
