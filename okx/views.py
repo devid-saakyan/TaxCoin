@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import User, Referral
-from .utlis import okx_ref, check_okx_keys, CheckKYC
+from .utlis import okx_ref, check_okx_keys, CheckKyc
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -45,14 +45,14 @@ def verify_user(request):
             if referrer and referrer.referrals.filter(referred_user__TelegramId=telegram_id).exists():
                 return JsonResponse({'error': 'Mutual referrals are not allowed'}, status=200)
 
-        registered, traded_volume = False, 0
+        registered, traded_volume = okx_ref(OKX_id)
         if registered:
             try:
                 user, created = User.objects.update_or_create(
                     TelegramId=telegram_id,
                     defaults={
                         'OKXId': OKX_id,
-                        'Balance': traded_volume.get('result').get('takerVol365Day'),
+                        'Balance': traded_volume,
                         'RegisteredWithReferral': RegisteredWithReferral,
                         'nickname': nickname,
                         'firstname': firstname,
@@ -66,7 +66,7 @@ def verify_user(request):
                 if referral_id and created:
                     Referral.objects.create(referrer_id=referral_id, referred_user=user)
 
-                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume.get('result').get('takerVol365Day')})
+                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
 
             except IntegrityError as e:
                 print(str(e))
@@ -104,7 +104,7 @@ def validate_OKX_keys(request):
 def CheckKyc(request):
     serializer = InviteRequestSerializer(data=request.data)
     if serializer.is_valid():
-        KYC = CheckKYC(serializer.validated_data['telegram_id'])
+        KYC = CheckKyc(serializer.validated_data['telegram_id'])
         return Response({'KYC': bool(KYC)})
 
 
@@ -198,13 +198,25 @@ def fee_amount(request):
         OKX_id = serializer.validated_data['OKX_id']
 
         registered, traded_volume = okx_ref(OKX_id)
-        traded_volume = traded_volume.get('result').get('takerVol365Day')
+        traded_volume = traded_volume
         print(registered, traded_volume)
         if registered:
+            user = User.objects.filter(OKXId=OKX_id).first()
+            if user:
+                balance = user.Balance
+            else:
+                balance = 0
             fees = (float(traded_volume) * 0.001
                     + float(traded_volume) * 0.0003)
             tax = fees * 2
-            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume), 'Balance': 24}, status=200)
+
+            return JsonResponse({
+                'success': True,
+                'Fees': fees,
+                'Tax': tax,
+                'TradingVolume': float(traded_volume),
+                'Balance': balance
+            }, status=200)
         else:
             return JsonResponse({'success': False, 'error': 'Failed to retrieve data from OKX API'}, status=200)
     else:

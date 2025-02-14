@@ -50,7 +50,7 @@ def verify_user(request):
                     TelegramId=telegram_id,
                     defaults={
                         'BybitId': bybit_id,
-                        'Balance': traded_volume.get('result').get('takerVol365Day'),
+                        'Balance': traded_volume,
                         'RegisteredWithReferral': RegisteredWithReferral,
                         'nickname': nickname,
                         'firstname': firstname,
@@ -64,7 +64,7 @@ def verify_user(request):
                 if referral_id and created:
                     Referral.objects.create(referrer_id=referral_id, referred_user=user)
 
-                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume.get('result').get('takerVol365Day')})
+                return JsonResponse({'success': True, 'message': 'User verified', 'traded_volume': traded_volume})
 
             except IntegrityError as e:
                 print(str(e))
@@ -194,15 +194,25 @@ def fee_amount(request):
     serializer = FeesRequestSerializer(data=request.data)
     if serializer.is_valid():
         bybit_id = serializer.validated_data['bybit_id']
-
         registered, traded_volume = bybit_ref(bybit_id)
-        traded_volume = traded_volume.get('result').get('takerVol365Day')
+        traded_volume = traded_volume
         print(registered, traded_volume)
         if registered:
+            user = User.objects.filter(BybitId=bybit_id).first()
+            if user:
+                balance = user.Balance
+            else:
+                balance = 0
             fees = (float(traded_volume) * 0.001
                     + float(traded_volume) * 0.0003)
             tax = fees * 2
-            return JsonResponse({'success': True, 'Fees': fees, 'Tax': tax, 'TradingVolume': float(traded_volume), 'Balance': 24}, status=200)
+            return JsonResponse({
+                'success': True,
+                'Fees': fees,
+                'Tax': tax,
+                'TradingVolume': float(traded_volume),
+                'Balance': balance
+            }, status=200)
         else:
             return JsonResponse({'success': False, 'error': 'Failed to retrieve data from Bybit API'}, status=200)
     else:

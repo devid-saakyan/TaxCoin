@@ -7,8 +7,8 @@ from pybit.unified_trading import HTTP
 
 
 def bybit_ref(uid):
-    APIKEY = 't7LDTWIOGj8OJFdPWb'
-    APISECRET = 'XkBXKdLEcE0XePJriPKsIVP2VKjBA61ip0Pa'
+    APIKEY = 'S2OzTq8R4mfHTWNzTh'
+    APISECRET = 'vlSfwcahnviq4zMINLX1xIWCx8rfWS2uFw58'
 
     payload = 'uid=' + uid
     recv_window = str(5000)
@@ -28,11 +28,12 @@ def bybit_ref(uid):
 
     url = "https://api.bybit.com/v5/user/aff-customer-info?"
     response = requests.get(url + payload, headers=headers)
+    print(response.text)
     try:
         if len(response.json().get('result')) > 0:
-            return True, response.json()#.get('result').get('takerVol365Day')
+            return True, response.json().get('result').get('takerVol30Day')
         else:
-            return True, {'retCode': 0, 'retMsg': '', 'result': {'uid': '266167900', 'takerVol30Day': '0', 'makerVol30Day': '0', 'tradeVol30Day': '0', 'depositAmount30Day': '6.963989', 'takerVol365Day': '624.358517', 'makerVol365Day': '0', 'tradeVol365Day': '624.358517', 'depositAmount365Day': '317.623065', 'totalWalletBalance': '1', 'depositUpdateTime': '2024-10-27 00:00:00', 'vipLevel': '0', 'volUpdateTime': '2024-10-27 00:00:00', 'KycLevel': 1}, 'retExtInfo': {}, 'time': 1730041578617}
+            return False, 0
     except:
         return response.json()
 
@@ -58,7 +59,8 @@ def CheckKYC(BybitId):
     except Exception as e:
         return 0
 
+
 if __name__ == '__main__':
     print(bybit_ref('266167900'))
-    print(CheckKYC('266167900'))
-    print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))
+    #print(CheckKYC('266167900'))
+    #print(check_bybit_keys('BvpHyAjshMW1T6D12E', '9KLiaZwQEQIvKiPU6lyev7k4ClZfQ9Bfy0dF'))

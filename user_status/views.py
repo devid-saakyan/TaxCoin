@@ -11,9 +11,6 @@ from drf_yasg import openapi
 
 
 class GetUserStateController(APIView):
-    """
-    Вьюха для получения состояния пользователя.
-    """
 
     @swagger_auto_schema(
         operation_summary="Получить состояние пользователя",
@@ -41,13 +38,9 @@ class GetUserStateController(APIView):
         }
     )
     def get(self, request, telegram_id=None):
-        """
-        Возвращает состояние пользователя и статусы на платформах.
-        """
         if not telegram_id:
             return Response({'error': 'TelegramId is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверяем статусы на платформах
         okx_status = OKXUser.objects.filter(TelegramId=telegram_id).exists()
         bybit_status = BybitUser.objects.filter(TelegramId=telegram_id).exists()
 
@@ -67,6 +60,7 @@ class GetUserStateController(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
 
 class PostUserStateController(APIView):
     @swagger_auto_schema(
