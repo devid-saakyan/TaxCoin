@@ -101,11 +101,13 @@ def validate_OKX_keys(request):
 @swagger_auto_schema(method='post',
                      request_body=InviteRequestSerializer)
 @api_view(['POST'])
-def CheckKyc(request):
+def check_kyc_view(request):
     serializer = InviteRequestSerializer(data=request.data)
     if serializer.is_valid():
-        KYC = CheckKyc(serializer.validated_data['telegram_id'])
-        return Response({'KYC': bool(KYC)})
+        telegram_id = serializer.validated_data['telegram_id']
+        KYC = CheckKyc(telegram_id)
+        return Response({'KYC': KYC})
+    return Response(serializer.errors, status=400)
 
 
 @swagger_auto_schema(method='post',

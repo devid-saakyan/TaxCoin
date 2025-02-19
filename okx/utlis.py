@@ -81,6 +81,7 @@ def check_okx_keys(api_key, api_secret):
 
 
 if __name__ == '__main__':
-    print(okx_ref(537722074245431945))
+    print(okx_ref(547817366697347609))
     print(okx_ref(582748711890208025))
+    print(CheckKyc(121212))
     #print(check_okx_keys('5c5be7af-88ef-4230-ba63-2cc46f28cd68','356A8B6A3AC17DACC0FC6EB1A6EA72DE'))

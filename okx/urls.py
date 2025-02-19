@@ -16,7 +16,7 @@ urlpatterns = [
     path('wallet/create/', create_user_wallet, name='create_user_wallet'),
     path('wallet/<int:telegram_id>/', get_user_wallet, name='get_user_wallet'),
     path('referrals/<int:telegram_id>/', get_user_referrals, name='referrals'),
-    path('KYC/', CheckKyc, name='referrals'),
+    path('KYC/', check_kyc_view, name='referrals'),
     path('Subscribed/', CheckSubscribe, name='Subscribe'),
     path('CheckState/', user_state_view, name='user_state_view'),
 ]
