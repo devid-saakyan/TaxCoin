@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
-from .models import UserState
-from .serializers import UserStateSerializer
+from .models import UserState, ExchangeAPIKey
+from .serializers import UserStateSerializer, ExchangeAPIKeySerializer
 from okx.models import User as OKXUser
 from Bybit.models import User as BybitUser
 from drf_yasg.utils import swagger_auto_schema
@@ -108,3 +108,50 @@ class PostUserStateController(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class AddOrUpdateAPIKeyView(APIView):
+
+    @swagger_auto_schema(request_body=ExchangeAPIKeySerializer)
+    def post(self, request):
+        serializer = ExchangeAPIKeySerializer(data=request.data)
+        if serializer.is_valid():
+            obj, created = ExchangeAPIKey.objects.update_or_create(
+                telegram_id=serializer.validated_data['telegram_id'],
+                exchange=serializer.validated_data['exchange'],
+                defaults={
+                    'api_key': serializer.validated_data['api_key'],
+                    'api_secret': serializer.validated_data['api_secret'],
+                    'passphrase': serializer.validated_data['passphrase'],
+                    'expired': serializer.validated_data.get('expired', False),
+                }
+            )
+            return Response({
+                'success': True,
+                'created': created,
+                'data': ExchangeAPIKeySerializer(obj).data
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckAPIKeyView(APIView):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('telegram_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True),
+            openapi.Parameter('exchange', openapi.IN_QUERY, type=openapi.TYPE_STRING, enum=['bybit', 'okx'], required=True),
+        ]
+    )
+    def get(self, request):
+        telegram_id = request.GET.get('telegram_id')
+        exchange = request.GET.get('exchange')
+
+        if not telegram_id or not exchange:
+            return Response({'error': 'telegram_id and exchange are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        exists = ExchangeAPIKey.objects.filter(telegram_id=telegram_id, exchange=exchange).exists()
+        return Response({
+            'telegram_id': telegram_id,
+            'exchange': exchange,
+            'has_keys': exists
+        }, status=status.HTTP_200_OK)
